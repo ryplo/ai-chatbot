@@ -1,39 +1,53 @@
 ask(A,S):-
-	related-action(A,S).
+	like(A),
+	related-action(A,S),
+	\+ previous(S);
+	unrelated-random(A,S),
+	\+ previous(S).
 
-ask(A,S):-
+ask(S):-
 	random(S).
 
 part-of(S,[S|_]).
 part-of(S,[_|X]):- 
 	part-of(S,X).
 
-related-action(P,S):-
+related-action(X,Y):-
 	play(P),
-	part-of(S,P).
+	part-of(X,P),
+	part-of(Y,P).
 
-related-action(E,S):-
+related-action(X,Y):-
 	eat(E),
-	part-of(S,E).
+	part-of(X,E),
+	part-of(Y,E).
 
-related-action(D,S):-
+related-action(X,Y):-
 	do(D),
-	part-of(S,D).
+	part-of(X,D),
+	part-of(Y,D).
 
-related-action(C,S):-
+related-action(X,Y):-
 	see(C),
-	part-of(S,C).
+	part-of(X,C),
+	part-of(Y,C).
 
-related-action(L,S):-
+related-action(X,Y):-
 	learn(L),
-	part-of(S,L).
+	part-of(X,L),
+	part-of(Y,L).
 
-related-action(M,S):-
+related-action(X,Y):-
 	make(M),
-	part-of(S,M).
+	part-of(X,M),
+	part-of(Y,M).
 
 random(S):-
 	related-action(P,S).
+
+unrelated-random(O,S):-
+	random(S),
+	\+ related-action(O,S).
 
 play([slides, sandbox, toys, trains, cars, playmat, build, bears, soft_toys, alphabets, numbers]).
 eat([cake, toffee, candy, sandwich, pizza, cheerios, veggies, fries]).
@@ -44,3 +58,4 @@ make([cake, sandwich, pizza, friends, memories]).
 
 like(nothing).
 dislike(nothing).
+previous(nothing).
