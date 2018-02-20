@@ -3,55 +3,64 @@ import random
 
 from pyswip import * # python and prolog bridge
 
+# Different message starters.
 POSITIVE_MESSAGES = ["Great!", "That\'s wonderful!", "Nice!", "Cool!", "Wow!"]
 NEGATIVE_MESSAGES = ["Aw that\'s a shame.", "That\'s unfortunate.", "That\'s okay.", "Oh no!"]
 
-# main function
+# Main function
 def start():
 	prolog = Prolog()
+
+	# Consult chatbot.pl. Should be in same directory
 	prolog.consult("chatbot.pl")
 
-	# flag to check if user wants to quit
+	# Flag to check if user wants to quit
 	play = True
 
-	# variable to save the next item to ask about
+	# Variable to save the next item to ask about
 	item = ""
 
-	# first intro message
+	# First intro message
 	easygui.msgbox('Let\'s figure out what you did today at school!', 'Conversation Intro')
 
 	ask_message = ""
-	# loop for conversation
+	# Loop for conversation
 	while play:
 
-		# calls 'ask' in prolog to find the next item to ask about
+		# Calls 'ask' in prolog to find the next item to ask about
+		# If there is an item (not the first message to be sent), the previously called
+		# item will be passed as an argument in the ask query. 
+		# If it is the first time a message is being sent (beginning of conversation), 
+		# only one argument is passed to get a random item.
 		if item:
 			item = list(map(lambda x: x["S"], prolog.query("ask(%s,S)" % (item))))[0]
 		else:
 			item = list(map(lambda x: x["S"], prolog.query("ask(S)")))[0]
 
-		# calls the ask function to create the message box
+		# Calls the ask function to create the message box
 		response = ask(item, ask_message)
 
-		# keeps track of which items were asked about
+		# Keeps track of which items were asked about
 		prolog.assertz("previous(%s)" % item)
 
-		# if the user likes the item, the message begins with a positive response
-		# the item is also recorded as being liked
+		# If the user did interact with the item, the message begins with a positive response
+		# The item is also recorded as having been encountered with in the knowledge base
 		if response == 'Yes':
-			prolog.assertz("like(%s)" % item)
+			prolog.assertz("did(%s)" % item)
 			ask_message = random.choice(POSITIVE_MESSAGES)
 
-		# if the user does not like the item, the message begins with a negative response
-		# the item is recorded as being disliked
+		# If the user did not encounter the item, the message begins with a negative response
+		# The item is recorded as being not encountered in the knowledge base
 		elif response == 'No':
-			prolog.assertz("dislike(%s)" % (item))
+			prolog.assertz("didnot(%s)" % (item))
 			found = False
 			ask_message = random.choice(NEGATIVE_MESSAGES)
 		else:
 			play = False
 
-
+# Prints out the message in message box with options for Yes, No and Quit
+# The value returned from the easygui buttonbox is the string "Yes", "No",
+# or "Quit" depending on the user's selection
 def ask(item, message=""):
 	response = easygui.buttonbox('%s Was there a %s at school today?' % (message, item), 'Conversation', ('Yes', 'No', 'Quit'))
 	return response
